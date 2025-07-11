@@ -59,7 +59,7 @@ class AssetsConfig:
     asset_id: str | None = None
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=False)
 class DataConfig:
     # LeRobot repo id. If None, fake data will be created.
     repo_id: str | None = None

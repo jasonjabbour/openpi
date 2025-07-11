@@ -84,9 +84,14 @@ def create_rlds_dataloader(
     return data_loader, num_batches
 
 
-def main(config_name: str, max_frames: int | None = None):
+def main(config_name: str, max_frames: int | None = None, data_dir: str | None = None):
     config = _config.get_config(config_name)
     data_config = config.data.create(config.assets_dirs, config.model)
+
+    # if you passed --data-dir on the CLI, use that instead of HF
+    if data_dir is not None:
+        data_config.repo_id = data_dir
+        data_config.asset_id = data_dir
 
     if data_config.rlds_data_dir is not None:
         data_loader, num_batches = create_rlds_dataloader(
@@ -108,6 +113,7 @@ def main(config_name: str, max_frames: int | None = None):
     norm_stats = {key: stats.get_statistics() for key, stats in stats.items()}
 
     output_path = config.assets_dirs / data_config.repo_id
+    output_path = "norm_stats.json"
     print(f"Writing stats to: {output_path}")
     normalize.save(output_path, norm_stats)
 
