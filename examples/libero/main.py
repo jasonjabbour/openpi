@@ -14,9 +14,10 @@ from openpi_client import websocket_client_policy as _websocket_client_policy
 import tqdm
 import tyro
 
+from prune_recover.monitors.libero_safety_monitor import LIBEROSafetyMonitor
+
 LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 LIBERO_ENV_RESOLUTION = 256  # resolution used to render training data
-
 
 @dataclasses.dataclass
 class Args:
@@ -43,6 +44,11 @@ class Args:
     video_out_path: str = "data/libero/videos"  # Path to save videos
 
     seed: int = 7  # Random Seed (for reproducibility)
+
+    ##################################################################################################################
+    # Safety monitor
+    ##################################################################################################################
+    safety_monitor: bool = True  # Whether to use the safety monitor
 
 
 def eval_libero(args: Args) -> None:
@@ -84,6 +90,9 @@ def eval_libero(args: Args) -> None:
         # Initialize LIBERO environment and task description
         env, task_description = _get_libero_env(task, LIBERO_ENV_RESOLUTION, args.seed)
 
+        if args.safety_monitor:
+            safety_monitor = LIBEROSafetyMonitor(env, task=task_description)    
+
         # Start episodes
         task_episodes, task_successes = 0, 0
         for episode_idx in tqdm.tqdm(range(args.num_trials_per_task)):
@@ -91,6 +100,11 @@ def eval_libero(args: Args) -> None:
 
             # Reset environment
             env.reset()
+
+            if args.safety_monitor:
+                # Reset safety monitor
+                safety_monitor.reset()
+
             action_plan = collections.deque()
 
             # Set initial states
@@ -157,6 +171,10 @@ def eval_libero(args: Args) -> None:
                         break
                     t += 1
 
+                    if args.safety_monitor:
+                        # Update safety monitor
+                        safety_monitor.update()
+
                 except Exception as e:
                     logging.error(f"Caught exception: {e}")
                     break
@@ -168,7 +186,7 @@ def eval_libero(args: Args) -> None:
             suffix = "success" if done else "failure"
             task_segment = task_description.replace(" ", "_")
             imageio.mimwrite(
-                pathlib.Path(args.video_out_path) / f"rollout_{task_segment}_{suffix}.mp4",
+                pathlib.Path(args.video_out_path) / f"rollout_{task_segment}_{suffix}_ep_{episode_idx}.mp4",
                 [np.asarray(x) for x in replay_images],
                 fps=10,
             )
