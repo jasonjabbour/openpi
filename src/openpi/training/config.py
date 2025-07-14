@@ -86,7 +86,7 @@ class DataConfig:
     action_sequence_keys: Sequence[str] = ("actions",)
 
     # If true, will use the LeRobot dataset task to define the prompt.
-    prompt_from_task: bool = False
+    prompt_from_task: bool = True
 
     # Only used for RLDS data loader (ie currently only used for DROID).
     rlds_data_dir: str | None = None
@@ -278,7 +278,7 @@ class LeRobotLiberoDataConfig(DataConfigFactory):
                         "observation/wrist_image": "wrist_image",
                         "observation/state": "state",
                         "actions": "actions",
-                        "prompt": "prompt",
+                        "prompt": "task",
                     }
                 )
             ]
@@ -346,7 +346,7 @@ class RLDSDroidDataConfig(DataConfigFactory):
                         "observation/joint_position": "observation/joint_position",
                         "observation/gripper_position": "observation/gripper_position",
                         "actions": "actions",
-                        "prompt": "prompt",
+                        "prompt": "task",
                     }
                 )
             ]
@@ -549,7 +549,7 @@ _CONFIGS = [
         # dataset. For your own dataset, you can change the repo_id to point to your dataset.
         # Also modify the DataConfig to use the new config you made for your dataset above.
         data=LeRobotLiberoDataConfig(
-            repo_id="physical-intelligence/libero",
+            repo_id="/home/ubuntu/vla/data/LIBERO_lerobot_format/libero",
             base_config=DataConfig(
                 # This flag determines whether we load the prompt (i.e. the task instruction) from the
                 # ``task`` field in the LeRobot dataset. If set to True, the prompt will show up in
@@ -598,7 +598,7 @@ _CONFIGS = [
         # you see many warnings being thrown during training.
         model=pi0_fast.Pi0FASTConfig(action_dim=7, action_horizon=10, max_token_len=180),
         data=LeRobotLiberoDataConfig(
-            repo_id="physical-intelligence/libero",
+            repo_id="/home/ubuntu/vla/data/LIBERO_lerobot_format/libero",
             base_config=DataConfig(prompt_from_task=True),
         ),
         # Note that we load the pi0-FAST base model checkpoint here.
