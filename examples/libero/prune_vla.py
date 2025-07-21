@@ -189,6 +189,26 @@ def magnitude_prune(local_ckpt, model_name="pi0_fast_libero", out_path="pi0_fast
 
     save_pruned_checkpoint(local_ckpt, flat, out_ckpt)
 
+
+def wanda_prune(local_ckpt, model_name="pi0_fast_libero", out_path="pi0_fast_libero_Wanda_pruned"):
+
+    params = restore_params(local_ckpt / "params", restore_type=np.ndarray)
+
+    # flatten
+    flat = flatten_dict(params, sep="/")
+
+    total_params_pruned = 0
+
+    # these are the blobs that come in shape (num_layers, …)
+    SCAN_KEYS = ['gating_einsum', 'linear'] # ["attn_vec_einsum", "kv_einsum", "q_einsum", "gating_einsum", "linear"]
+
+
+    # Calibrate activation norms
+    print("Calibrating activation norms for layers:", KEYS_TO_PRUNE)
+    act_norms = calibrate_activation_norms(model, params, cfg, KEYS_TO_PRUNE, num_steps=50)
+
+
+
 def save_pruned_checkpoint(
     orig_ckpt: Path,
     pruned_flat: dict[str, np.ndarray],
@@ -225,11 +245,10 @@ def save_pruned_checkpoint(
 
 if __name__ == "__main__":
 
-
     model_name    = "pi0_fast_libero"  # or your pi0 checkpoint name
     checkpoint_uri = f"gs://openpi-assets/checkpoints/{model_name}"
     local_ckpt = Path(maybe_download(checkpoint_uri))
-    out_ckpt  = Path("/home/ubuntu/vla/models/pi0_fast_libero_Magnitude_pruned_orbax")
+    out_ckpt  = Path(f"/home/ubuntu/vla/models/pi0_fast_libero_{PRUNING_ALGORITHM}_pruned_orbax")
     print(f"Using checkpoint at: {local_ckpt}")
 
     if TEST_MODEL:
@@ -240,6 +259,8 @@ if __name__ == "__main__":
 
     if PRUNE_MODEL:
         if PRUNING_ALGORITHM == 'Magnitude':
-            magnitude_prune(local_ckpt, model_name="pi0_fast_libero", out_path=out_ckpt)
+            magnitude_prune(local_ckpt, model_name=model_name, out_path=out_ckpt)
+        elif PRUNING_ALGORITHM == 'Wanda':
+            raise NotImplementedError("Wanda pruning is not implemented yet.")
         else:
             raise ValueError(f"Unknown pruning algorithm: {PRUNING_ALGORITHM}")
