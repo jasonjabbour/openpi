@@ -18,6 +18,7 @@ class EnvMode(enum.Enum):
     ALOHA_SIM = "aloha_sim"
     DROID = "droid"
     LIBERO = "libero"
+    MAGNITUDE_PRUNED = "magnitude_pruned"
 
 
 @dataclasses.dataclass
@@ -72,6 +73,10 @@ DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.LIBERO: Checkpoint(
         config="pi0_fast_libero",
         dir="gs://openpi-assets/checkpoints/pi0_fast_libero",
+    ),
+    EnvMode.MAGNITUDE_PRUNED: Checkpoint(
+        config="pi0_fast_libero",
+        dir="/home/ubuntu/vla/models/pi0_fast_libero_Magnitude_pruned_orbax",
     ),
 }
 
